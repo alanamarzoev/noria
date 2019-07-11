@@ -1,6 +1,10 @@
 use backlog;
-use noria::channel;
 use prelude::*;
+use std::collections::HashMap;
+use nom_sql::CreateTableStatement;
+use noria::{channel, ControllerHandle, ZookeeperAuthority};
+use noria::SyncControllerHandle;
+
 
 /// A StreamUpdate reflects the addition or deletion of a row from a reader node.
 #[derive(Clone, Debug, PartialEq)]
@@ -36,6 +40,8 @@ pub struct Reader {
 
     for_node: NodeIndex,
     state: Option<Vec<usize>>,
+    pass_through: Option<String>,
+    name: Option<String>,
 }
 
 impl Clone for Reader {
@@ -46,17 +52,21 @@ impl Clone for Reader {
             streamers: self.streamers.clone(),
             state: self.state.clone(),
             for_node: self.for_node,
+            pass_through: self.pass_through.clone(),
+            name: self.name.clone(),
         }
     }
 }
 
 impl Reader {
-    pub fn new(for_node: NodeIndex) -> Self {
+    pub fn new(for_node: NodeIndex, pass_through: Option<String>, name: Option<String>) -> Self {
         Reader {
             writer: None,
             streamers: Vec::new(),
             state: None,
             for_node,
+            pass_through: pass_through,
+            name: name,
         }
     }
 
@@ -82,6 +92,8 @@ impl Reader {
             streamers: mem::replace(&mut self.streamers, Vec::new()),
             state: self.state.clone(),
             for_node: self.for_node,
+            pass_through: self.pass_through.clone(),
+            name: self.name.clone(),
         }
     }
 
@@ -151,6 +163,28 @@ impl Reader {
     pub(in crate::node) fn process(&mut self, m: &mut Option<Box<Packet>>, swap: bool) {
         if let Some(ref mut state) = self.writer {
             let m = m.as_mut().unwrap();
+
+            match &self.pass_through {
+                Some(addr) => {
+                    println!("TRYING TO CONNECT AT ADDR: {:#?}", addr);
+                    println!("table name: {:#?}", self.name);
+                    let rt = tokio::runtime::Runtime::new().unwrap();
+                    let executor = rt.executor();
+                    let mut db = SyncControllerHandle::from_zk("127.0.0.1", executor).unwrap();
+
+                    //let mut db = ControllerHandle::from_zk(addr);
+                    match &self.name {
+                        Some(n) => {
+                            println!("here1");
+                            let mut table = db.table(&n).unwrap();
+                            println!("passing along data: {:#?}", m.clone().take_data());
+                            // table.insert(m.clone().take_data());
+                        },
+                        None => {},
+                    }
+                },
+                None => {},
+            }
             // make sure we don't fill a partial materialization
             // hole with incomplete (i.e., non-replay) state.
             if m.is_regular() && state.is_partial() {

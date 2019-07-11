@@ -231,10 +231,56 @@ impl<'a> Migration<'a> {
     }
 
     fn ensure_reader_for(&mut self, n: NodeIndex, name: Option<String>) {
+        // make a reader
+        let read_df_addr = String::from("127.0.0.1");
+        let recipe = self.mainline.recipe.clone().expressions;
+
+        // determine candidate tables to which this reader should forward updates to if it's a write DF
+        let mut tables = Vec::new();
+        for (_, triple) in recipe {
+            let (_, y, _ )= triple;
+            match y {
+                nom_sql::SqlQuery::CreateTable(ref create) => {
+                    match create {
+                        nom_sql::CreateTableStatement{table, fields, keys} => {
+                            tables.push(table.clone());
+                        },
+                        _ => {},
+                    }
+                },
+                _ => {},
+            }
+        }
+
+        println!("TABLES FOUND: {:#?}", tables);
+
+        let mut write_to = None;
+        println!("table comparison up ahead...");
+        match name.clone() {
+            Some(n) => {
+                for table in &tables {
+                    println!("table name: {:#?}", table.name);
+                    let table2: &str = &table.name.clone().to_owned()[..];
+                    let lower: &str = &table.name.to_owned()[..].to_lowercase();
+                    let mut _n = n.to_owned();
+                    let n: &str = &_n[..];
+                    println!("checking table: {:?}, name: {:?}", table, n);
+                    if lower.contains(n) {
+                        println!("reader {:?} sends to base table {:?}", n, table);
+                        write_to = Some(String::from(table2));
+                    } else if n.contains(lower) {
+                        println!("reader {:?} sends to base table {:?}", n, table);
+                        write_to = Some(String::from(table2));
+                    }
+                }
+            },
+            None => {},
+        }
+
         use std::collections::hash_map::Entry;
         if let Entry::Vacant(e) = self.readers.entry(n) {
             // make a reader
-            let r = node::special::Reader::new(n);
+            let r = node::special::Reader::new(n, Some(read_df_addr), write_to.clone());
             let mut r = if let Some(name) = name {
                 self.mainline.ingredients[n].named_mirror(r, name)
             } else {

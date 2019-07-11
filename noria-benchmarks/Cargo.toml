@@ -113,6 +113,10 @@ path = "vote-purge-stress/main.rs"
 name = "replay"
 path = "replay/main.rs"
 
+[[bin]]
+name = "write-policies"
+path = "write-policies/write-policies.rs"
+
 #[[bin]]
 #name = "security-mysql"
 #path = "piazza/mysql.rs"

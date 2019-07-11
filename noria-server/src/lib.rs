@@ -356,7 +356,6 @@
 #![feature(try_blocks)]
 #![feature(vec_remove_item)]
 #![feature(crate_visibility_modifier)]
-#![deny(missing_docs)]
 #![deny(unused_extern_crates)]
 //#![deny(unreachable_pub)]
 #![allow(clippy::too_many_arguments)]
@@ -419,7 +418,7 @@ where
         .unwrap()
 }
 
-#[derive(Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 crate struct Config {
     crate sharding: Option<usize>,
     crate partial_enabled: bool,

@@ -267,6 +267,10 @@ fn instance_campaign<A: Authority + 'static>(
                     Some(ref state) if state.epoch > epoch => Err(()),
                     Some(mut state) => {
                         state.epoch = epoch;
+                        //config.what;
+                        // println!("state config {:?}, {:?}, {:?}, {:?}", state.config.sharding, state.config.partial_enabled, state.config.frontier_strategy, state.config.reuse);
+                        // println!("config {:?}, {:?}, {:?}, {:?}", config.sharding, config.partial_enabled, config.frontier_strategy, config.reuse);
+                        println!("state config: {:#?}, config: {:#?}", state.config, config); 
                         if state.config != config {
                             panic!("Config in Zk does not match requested config!")
                         }

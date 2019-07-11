@@ -31,6 +31,15 @@ impl Default for Builder {
     }
 }
 impl Builder {
+    pub fn default_with_addr(listen_addr: IpAddr) -> Self {
+        Self {
+            config: Config::default(),
+            listen_addr: listen_addr.clone(),
+            log: slog::Logger::root(slog::Discard, o!()),
+            memory_limit: None,
+            memory_check_frequency: None,
+        }
+    }
     /// Set the maximum number of concurrent partial replay requests a domain can have outstanding
     /// at any given time.
     ///
