@@ -170,21 +170,37 @@ impl Reader {
                     println!("table name: {:#?}", self.name);
                     let rt = tokio::runtime::Runtime::new().unwrap();
                     let executor = rt.executor();
-                    let mut db = SyncControllerHandle::from_zk("127.0.0.1", executor).unwrap();
-
-                    //let mut db = ControllerHandle::from_zk(addr);
-                    match &self.name {
+                    let mut db = SyncControllerHandle::from_zk("127.0.0.1:2181/read", executor).unwrap();
+                    let name = Some("Post");
+                    match name {
                         Some(n) => {
-                            println!("here1");
+                            println!("hereeee");
                             let mut table = db.table(&n).unwrap();
-                            println!("passing along data: {:#?}", m.clone().take_data());
-                            // table.insert(m.clone().take_data());
+                            let mut records : Vec<Vec<DataType>> = Vec::new();
+                            for i in 0..1 {
+                                let pid = i.into();
+                                let author = i.into();
+                                let cid = 0.into();
+                                let content = "".into();
+                                let anon = 1.into();
+                                if i != 0 {
+                                    let private = 0.into();
+                                    records.push(vec![pid, cid, author, content, private, anon]);
+                                } else {
+                                    let private = 0.into();
+                                    records.push(vec![pid, cid, author, content, private, anon]);
+                                }
+                            }
+                            table.insert(records[0].clone());
                         },
-                        None => {},
+                        None => {
+                            println!("not doing the right thing");
+                        },
                     }
                 },
                 None => {},
             }
+
             // make sure we don't fill a partial materialization
             // hole with incomplete (i.e., non-replay) state.
             if m.is_regular() && state.is_partial() {

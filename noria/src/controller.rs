@@ -197,6 +197,8 @@ impl ControllerHandle<consensus::ZookeeperAuthority> {
             Err(e) => future::Either::B(future::err(e)),
         }
     }
+
+
 }
 
 impl<A: Authority + 'static> ControllerHandle<A> {
@@ -337,13 +339,17 @@ impl<A: Authority + 'static> ControllerHandle<A> {
             .call(ControllerRequest::new("table_builder", &name).unwrap())
             .map_err(|e| format_err!("failed to fetch table builder: {:?}", e))
             .and_then(move |body: hyper::Chunk| {
+                println!("table building");
                 match serde_json::from_slice::<Option<TableBuilder>>(&body) {
-                    Ok(Some(tb)) => future::Either::A(
+                    Ok(Some(tb)) => {
+                        println!("some tb");
+                        future::Either::A(
                         tb.build(domains)
                             .into_future()
                             .map_err(failure::Error::from),
-                    ),
+                    )},
                     Ok(None) => {
+                        println!("none");
                         future::Either::B(future::err(failure::err_msg("view table not exist")))
                     }
                     Err(e) => future::Either::B(future::err(failure::Error::from(e))),
@@ -411,8 +417,17 @@ impl<A: Authority + 'static> ControllerHandle<A> {
         &mut self,
         new_recipe: &str,
     ) -> impl Future<Item = ActivationResult, Error = failure::Error> + Send {
+        println!("install recipe rpc");
         self.rpc("install_recipe", new_recipe, "failed to install recipe")
     }
+
+    // pub fn set_forwarding_addr(
+    //     &mut self,
+    //     addr: &str,
+    // ) -> impl Future<Item = ActivationResult, Error = failure::Error> + Send {
+    //     println!("settting fwding addr");
+    //     self.rpc("set_forwarding_addr", addr, "failed to set fwding addr")
+    // }
 
     /// Fetch a graphviz description of the dataflow graph.
     ///
@@ -599,9 +614,22 @@ where
         &mut self,
         r: S,
     ) -> Result<ActivationResult, failure::Error> {
+        println!("installing recipe in sync controller handle");
         let fut = self.handle()?.install_recipe(r.as_ref());
         self.run(fut)
     }
+
+    // pub fn set_fwd_addr<S: AsRef<str>>(
+    //     &mut self,
+    //     r: S,
+    // ) -> Result<ActivationResult, failure::Error> {
+    //     println!("m1");
+    //     let fut = self.handle()?.set_forwarding_addr(r.as_ref());
+    //     let res = fut.wait();
+    //     println!("m2");
+    //     res
+    //     // self.run(fut)
+    // // }
 
     /// Extend the Noria recipe.
     ///

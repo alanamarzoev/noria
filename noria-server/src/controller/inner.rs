@@ -45,6 +45,7 @@ pub(super) struct ControllerInner {
 
     /// Current recipe
     pub recipe: Recipe,
+    pub fwding_addr: bool, // address of DF to forward updates to. (should be None if this is a read policy DF)
 
     pub(super) domains: HashMap<DomainIndex, DomainHandle>,
     pub(in crate::controller) domain_nodes: HashMap<DomainIndex, Vec<NodeIndex>>,
@@ -297,6 +298,12 @@ impl ControllerInner {
                     self.set_security_config(args)
                         .map(|r| json::to_string(&r).unwrap())
                 }),
+            // (Method::POST, "/set_forwarding_addr") => json::from_slice(&body)
+            //     .map_err(|_| StatusCode::BAD_REQUEST)
+            //     .map(|args| {
+            //         self.set_forwarding_addr(args)
+            //             .map(|r| json::to_string(&r).unwrap())
+            //     }),
             (Method::POST, "/create_universe") => json::from_slice(&body)
                 .map_err(|_| StatusCode::BAD_REQUEST)
                 .map(|args| {
@@ -480,7 +487,7 @@ impl ControllerInner {
 
             read_addrs: HashMap::default(),
             workers: HashMap::default(),
-
+            fwding_addr: false,
             pending_recovery,
             last_checked_workers: Instant::now(),
 
@@ -1024,6 +1031,13 @@ impl ControllerInner {
         Ok(())
     }
 
+    // fn set_forwarding_addr(&mut self, p: bool) -> Result<(), String> {
+    //     println!("herehere");
+    //     self.fwding_addr = p;
+    //     println!("herehere2");
+    //     Ok(())
+    // }
+
     fn apply_recipe(&mut self, mut new: Recipe) -> Result<ActivationResult, String> {
         let r = self.migrate(|mig| {
             new.activate(mig)
@@ -1126,6 +1140,7 @@ impl ControllerInner {
         authority: &Arc<A>,
         r_txt: String,
     ) -> Result<ActivationResult, String> {
+        println!("In install recipe");
         match Recipe::from_str(&r_txt, Some(self.log.clone())) {
             Ok(r) => {
                 let old = mem::replace(&mut self.recipe, Recipe::blank(None));

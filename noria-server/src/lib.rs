@@ -430,6 +430,7 @@ crate struct Config {
     crate quorum: usize,
     crate reuse: ReuseConfigType,
     crate threads: Option<usize>,
+    crate fwding_addr: bool,
 }
 impl Default for Config {
     fn default() -> Self {
@@ -453,6 +454,7 @@ impl Default for Config {
             threads: Some(2),
             #[cfg(not(any(debug_assertions, test)))]
             threads: None,
+            fwding_addr: false,
         }
     }
 }

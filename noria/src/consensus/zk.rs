@@ -45,7 +45,7 @@ pub struct ZookeeperAuthority {
 impl ZookeeperAuthority {
     /// Create a new instance.
     pub fn new(connect_string: &str) -> Result<Self, Error> {
-        println!("in zkauth new");
+        println!("creating new zk");
         let zk = ZooKeeper::connect(connect_string, Duration::from_secs(1), EventWatcher).context(
             format!(
                 "Failed to connect to ZooKeeper at {}. Do you have \"maxClientCnxns\" set \
@@ -53,14 +53,12 @@ impl ZookeeperAuthority {
                 connect_string
             ),
         )?;
-        println!("in zkauth new2");
         let _ = zk.create(
             "/",
             vec![],
             Acl::open_unsafe().clone(),
             CreateMode::Persistent,
         );
-        println!("in zkauth new3");
         Ok(Self {
             zk,
             log: slog::Logger::root(slog::Discard, o!()),

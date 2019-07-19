@@ -49,6 +49,10 @@ impl Builder {
         self.config.domain_config.concurrent_replays = n;
     }
 
+    pub fn set_fwd_addr(&mut self, n: bool) {
+        self.config.fwding_addr = n;
+    }
+
     /// Set the longest time a partial replay response can be delayed.
     pub fn set_partial_replay_batch_timeout(&mut self, t: time::Duration) {
         self.config.domain_config.replay_batch_timeout = t;

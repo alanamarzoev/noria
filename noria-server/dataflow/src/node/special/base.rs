@@ -138,6 +138,7 @@ impl Base {
         mut ops: Vec<TableOperation>,
         state: &StateMap,
     ) -> Records {
+        println!("in base process, ops: {:#?}", ops);
         if self.primary_key.is_none() || ops.is_empty() {
             return ops
                 .into_iter()
@@ -179,6 +180,7 @@ impl Base {
                 LookupResult::Missing => unreachable!(),
             }
         };
+
         let mut current = get_current(&this_key);
         let mut was = current.clone();
 
