@@ -43,7 +43,6 @@ impl Backend {
                 // if !partial {
                     // cb.disable_partial();
                 // }
-                println!("woohoo");
                 //let g = cb.start(authority).wait().unwrap();
                 let log = noria::logger_pls();
                 let blender_log = log.clone();
@@ -123,35 +122,35 @@ impl Backend {
         self.g.set_security_config(config);
         //self.g.on_worker(|w| w.set_security_config(config)).unwrap();
     }
-    //
-    // fn migrate(&mut self, schema_file: &str, query_file: Option<&str>) -> Result<(), String> {
-    //     use std::io::Read;
-    //
-    //     // Read schema file
-    //     println!("opening schema file: {:#?}", schema_file);
-    //     let mut sf = File::open(schema_file).unwrap();
-    //     let mut s = String::new();
-    //     sf.read_to_string(&mut s).unwrap();
-    //
-    //     let mut rs = s.clone();
-    //     s.clear();
-    //
-    //     // Read query file
-    //     match query_file {
-    //         None => (),
-    //         Some(qf) => {
-    //             let mut qf = File::open(qf).unwrap();
-    //             qf.read_to_string(&mut s).unwrap();
-    //             rs.push_str("\n");
-    //             rs.push_str(&s);
-    //         }
-    //     }
-    //
-    //     // Install recipe
-    //     self.g.install_recipe(&rs).unwrap();
-    //
-    //     Ok(())
-    // }
+    
+    fn migrate(&mut self, schema_file: &str, query_file: Option<&str>) -> Result<(), String> {
+        use std::io::Read;
+    
+        // Read schema file
+        println!("opening schema file: {:#?}", schema_file);
+        let mut sf = File::open(schema_file).unwrap();
+        let mut s = String::new();
+        sf.read_to_string(&mut s).unwrap();
+    
+        let mut rs = s.clone();
+        s.clear();
+    
+        // Read query file
+        match query_file {
+            None => (),
+            Some(qf) => {
+                let mut qf = File::open(qf).unwrap();
+                qf.read_to_string(&mut s).unwrap();
+                rs.push_str("\n");
+                rs.push_str(&s);
+            }
+        }
+    
+        // Install recipe
+        self.g.install_recipe(&rs).unwrap();
+    
+        Ok(())
+    }
 }
 
 
@@ -230,10 +229,10 @@ fn main() {
 
     // create both the read and write dataflows
     let mut write_df = Backend::new(partial, shard, reuse, DataflowType::Write);
-    let mut read_df = Backend::new(partial, shard, reuse, DataflowType::Read);
+    // let mut read_df = Backend::new(partial, shard, reuse, DataflowType::Read);
 
     // set schema for both the read and write dataflows
-    // write_df.migrate(sloc, None).unwrap();
+    write_df.migrate(sloc, Some(qloc)).unwrap();
     // read_df.migrate(sloc, Some(qloc)).unwrap();
     //
     // // set write policies
